@@ -1,5 +1,7 @@
 # PRO1-AA - Magic Squares #
 - C Compiler (Required)
+- GTK v4.0
+- Glade
 
 # Aithors #
 - Josue S. Hidalgo S. // Allan J. Jimenez R.
