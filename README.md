@@ -1,4 +1,4 @@
-# PRO0-AA - Magic Squares #
+# PRO1-AA - Magic Squares #
 - C Compiler (Required)
 
 # Aithors #
