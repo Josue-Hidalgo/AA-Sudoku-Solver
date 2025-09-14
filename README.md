@@ -1,4 +1,4 @@
-# PRO1-AA - Magic Squares #
+# PRO2-AA - Sudoku #
 - C Compiler (Required)
 - GTK v4.0
 - Glade
@@ -10,4 +10,4 @@
 - j.hidalgo.5@estudiantec.cr // a.jimenez.10@estudiantec.cr
 
 # Description #
-- This program will display a GTK - Glade GUI with a Magic Square that the user will build with help of the algorithm of his choose.
+- This program will display a GTK - Glade GUI with a Sudoku game. 
