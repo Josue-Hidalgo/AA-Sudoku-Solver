@@ -29,8 +29,9 @@
     border: 1px solid black;
     border-radius: 0;
     background-color: white;
-    font-size: 18px;
-    font-weight: bold;
+    font-family: "Press Start 2P", monospace;
+    font-size: 10px;
+    font-weight: 500;
     color: black;
     min-height: 50px;
     min-width: 50px;
@@ -43,8 +44,9 @@
     border: 1px solid black;
     border-radius: 0;
     background-color: white;
-    font-size: 18px;
-    font-weight: bold;
+    font-family: "Press Start 2P", monospace;
+    font-size: 10px;
+    font-weight: 500;
     color: black;
 }
 
