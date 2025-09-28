@@ -2,16 +2,16 @@
 CC = gcc
 
 # Opciones de compilación
-CFLAGS = -Wall -Wextra -std=c11
+CFLAGS = -Wall -Wextra -std=c11 `pkg-config --cflags gtk+-3.0`
 
 # Librerías
-LIBS = -lm
+LIBS = -lm `pkg-config --libs gtk+-3.0`
 
 # Nombre del ejecutable
-TARGET = prueba
+TARGET = sudoku_glade
 
 # Archivos fuente
-SRC = prueba.c
+SRC = mainglade.c
 
 # Regla por defecto
 all: $(TARGET)
