@@ -1,42 +1,68 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void printMatrix(int square[3][3]) {
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-            printf("%3d ", square[i][j]);
+#define SIZE 3
+
+typedef struct {
+    int sudoku[SIZE][SIZE][SIZE][SIZE];
+} Sudoku;
+
+void printSudoku(const Sudoku *s) {
+    printf("---------------------\n");
+    for (int iG = 0; iG < SIZE; iG++) {
+        for (int jG = 0; jG < SIZE; jG++) {
+            for (int i = 0; i < SIZE; i++) {
+                for (int j = 0; j < SIZE; j++) {
+                    int valor = s->sudoku[iG][jG][i][j];
+                    printf("%2d ", valor);
+                }
+                printf("| ");
+            }
+            printf("\n");
         }
-        printf("\n");
+        if (iG < SIZE - 1)
+            printf("------+-------+------\n"); // Separador entre grupos de submatrices
     }
-    printf("\n");
 }
 
-int main() {
-    int matrizG[3][3][3][3]; // G de grande, muy descriptivo
-
+void inicializarSudoku(Sudoku *s) {
     // llenar las matrices de 0s
     // la G representa que es la y (filas) y x (columnas) de la matriz grande
-    for (int iG = 0; iG < 3; iG++) { 
-        for (int jG = 0; jG < 3; jG++) {
+    for (int iG = 0; iG < SIZE; iG++) { 
+        for (int jG = 0; jG < SIZE; jG++) {
             // estas ya son para las submatrices
-            for (int i = 0; i < 3; i++) {
-                for (int j = 0; j < 3; j++) {
-                    matrizG[iG][jG][i][j] = 0;
+            for (int i = 0; i < SIZE; i++) {
+                for (int j = 0; j < SIZE; j++) {
+                    s->sudoku[iG][jG][i][j] = 0;
                 }
             }
         }
     }
+}
 
-    matrizG[1][2][0][0] = 1; // en la matriz [1][2], pongo un 1 en la posición [0][0]
-    matrizG[0][0][2][1] = 3; // en la matriz [0][0], pongo un 3 en la posición [2][1]
-    
-    // imprimir todas las matrices
-    for (int iG = 0; iG < 3; iG++) {
-        for (int jG = 0; jG < 3; jG++) {
-            printf("matrizG[%d][%d]:\n", iG, jG);
-            printMatrix(matrizG[iG][jG]);
-        }
-    }
+int guardarSudoku(const char *filename, const Sudoku *s) {
+    FILE *file = fopen(filename, "wb");
+    if (file == NULL)
+        return 0;
+    size_t escritos = fwrite(s, sizeof(Sudoku), 1, file);
+    fclose(file);
+
+    return (escritos == 1); // 1 si se abrió el archivo, 0 si fue error
+}
+
+int cargarSudoku(const char *filename, Sudoku *s) {
+    FILE *file = fopen(filename, "rb");
+    if (file == NULL)
+        return 0;
+    size_t leidos = fread(s, sizeof(Sudoku), 1, file);
+    fclose(file);
+
+    return (leidos == 1); // 1 si se abrió el archivo, 0 si fue error
+}
+
+int main() {
+    Sudoku sudoku;
+
 
     return 0;
 }
