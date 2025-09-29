@@ -8,10 +8,10 @@ CFLAGS = -Wall -Wextra -std=c11 `pkg-config --cflags gtk+-3.0`
 LIBS = -lm `pkg-config --libs gtk+-3.0`
 
 # Nombre del ejecutable
-TARGET = sudoku_glade
+TARGET = prueba
 
 # Archivos fuente
-SRC = mainglade.c
+SRC = prueba.c
 
 # Regla por defecto
 all: $(TARGET)
