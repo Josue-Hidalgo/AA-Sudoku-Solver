@@ -1,27 +1,9 @@
-/* Grid principal del Sudoku - borde grueso para separar bloques */
+/* Grid principal del Sudoku 9x9 - borde grueso y espaciado para simular bloques 3x3 */
 #IDGrid {
     border: 3px solid black;
     border-radius: 0;
     background-color: black;
     padding: 3px;
-}
-
-/* Subgrids 3x3 específicos - sin espaciado interno */
-#IDSubgrid1, #IDSubgrid2, #IDSubgrid3, 
-#IDSubgrid4, #IDSubgrid5, #IDSubgrid6, 
-#IDSubgrid7, #IDSubgrid8, #IDSubgrid9 {
-    border: 0;
-    background-color: transparent;
-    padding: 0;
-    margin: 0;
-}
-
-/* Clase genérica para subgrids */
-.sudoku-subgrid {
-    border: 0;
-    background-color: transparent;
-    padding: 0;
-    margin: 0;
 }
 
 /* Celdas individuales - cuadros blancos con divisiones */
@@ -41,13 +23,30 @@
 
 /* Clase específica para celdas de Sudoku */
 .sudoku-cell {
-    border: 1px solid black;
+    border: 1px solid #ccc;
     border-radius: 0;
     background-color: white;
     font-family: "Press Start 2P", monospace;
     font-size: 10px;
     font-weight: 500;
     color: black;
+}
+
+/* Bordes gruesos para delimitar submatrices 3x3 */
+.sudoku-cell.block-top {
+    border-top: 3px solid black;
+}
+
+.sudoku-cell.block-bottom {
+    border-bottom: 3px solid black;
+}
+
+.sudoku-cell.block-left {
+    border-left: 3px solid black;
+}
+
+.sudoku-cell.block-right {
+    border-right: 3px solid black;
 }
 
 /* Estilo para focus - resaltar la celda seleccionada */
@@ -69,6 +68,15 @@ entry:hover {
     border: 1px solid black;
     background-color: white;
     box-shadow: none;
+}
+
+/* Alternativa: Usar márgenes para crear espacios entre bloques */
+.sudoku-cell.block-spacing-bottom {
+    margin-bottom: 3px;
+}
+
+.sudoku-cell.block-spacing-right {
+    margin-right: 3px;
 }
 
 /* Estilo para la ventana principal */
