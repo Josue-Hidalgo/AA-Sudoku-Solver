@@ -7,6 +7,11 @@ typedef struct {
     int sudoku[SIZE][SIZE];
 } Sudoku;
 
+typedef struct {
+    int row;
+    int col;
+} Cell;
+
 void printSudoku(const Sudoku *s) {
     for (int y = 0; y < SIZE; y++) {
         for (int x = 0; x < SIZE; x++)
@@ -61,25 +66,58 @@ int promising(Sudoku *s, int row, int col, int num) {
     return 1;
 }
 
-void incrementarCasilla (int row, int col){
+/*void incrementarCasilla (int row, int col){
     if (col < SIZE - 1) {
         col++;
     } else {
         col = 0;
         row++;
     }
-}
+}*/
 
-void emptyCellsExist(Sudoku *s) {
-    for (int y = 0; y < SIZE; y++) {
-        for (int x = 0; x < SIZE; x++) {
-            if (s->sudoku[y][x] == 0)
-                s->sudoku[y][x] = 1;
+// Función para encontrar la siguiente celda vacía
+int findEmptyCell(const Sudoku *s, Cell *cell) {
+    for (cell->row = 0; cell->row < SIZE; cell->row++) {
+        for (cell->col = 0; cell->col < SIZE; cell->col++) {
+            if (s->sudoku[cell->row][cell->col] == 0) {
+                return 1; // Encontró celda vacía
+            }
         }
     }
+    return 0; // No hay celdas vacías
 }
 
-void solver(Sudoku *s) {
+int solver(Sudoku *s) {
+    Cell current;
+    
+    // Si no hay celdas vacías, el sudoku está resuelto
+    if (!findEmptyCell(s, &current)) {
+        return 1; // Éxito
+    }
+    
+    int row = current.row;
+    int col = current.col;
+    
+    // Probar números del 1 al 9
+    for (int num = 1; num <= 9; num++) {
+        if (promising(s, row, col, num)) {
+            // Intentar con este número
+            s->sudoku[row][col] = num;
+            
+            // Recursivamente resolver el resto
+            if (solver(s)) {
+                return 1; // Éxito
+            }
+            
+            // Si falla, deshacer (backtrack)
+            s->sudoku[row][col] = 0;
+        }
+    }
+    
+    return 0; // No hay solución
+}
+
+/*void solver(Sudoku *s) {
     int end = 0;
     for (int y = 0; y < SIZE; y++) {
         for (int x = 0; x < SIZE; x++) {
@@ -101,7 +139,7 @@ void solver(Sudoku *s) {
             }
         }
     }
-}
+}*/
 
 
 int main() {
@@ -133,13 +171,14 @@ int main() {
         printf("Error al cargar el sudoku.\n");
     }
 
-    Sudoku sudokuCargado2;
+    printf("Sudoku original:\n");
+    printSudoku(&sudokuCargado);
     
-    if (cargarSudoku("sudoku2.bin", &sudokuCargado2)) {
-        printf("Sudoku cargado exitosamente:\n");
-        printSudoku(&sudokuCargado2);
+    if (solver(&sudokuCargado)) {
+        printf("\nSudoku resuelto:\n");
+        printSudoku(&sudokuCargado);
     } else {
-        printf("Error al cargar el sudoku.\n");
+        printf("\nNo se pudo resolver el sudoku.\n");
     }
 
     return 0;
