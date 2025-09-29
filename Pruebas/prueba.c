@@ -7,6 +7,10 @@ typedef struct {
     int sudoku[SIZE][SIZE][SIZE][SIZE];
 } Sudoku;
 
+typedef struct {
+    int Y, X, y, x;
+} coo;
+
 void printSudoku(const Sudoku *s) {
     printf("-------------------------------+\n");
     for (int iG = 0; iG < SIZE; iG++) {
