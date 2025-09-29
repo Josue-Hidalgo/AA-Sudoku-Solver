@@ -38,27 +38,24 @@ int cargarSudoku(const char *filename, Sudoku *s) {
 
 int promising(Sudoku *s, int row, int col, int num) {
     // Verificar fila
-    for (int x = 0; x < SIZE; x++) {
+    for (int x = 0; x < SIZE; x++)
         if (s->sudoku[row][x] == num)
             return 0;
-    }
 
     // Verificar columna
-    for (int y = 0; y < SIZE; y++) {
+    for (int y = 0; y < SIZE; y++)
         if (s->sudoku[y][col] == num)
-            return 0; //
-    }
+            return 0;
 
     // Verificar subcuadro 3x3
     int startRow = row - row % 3;
     int startCol = col - col % 3;
 
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
+    // Verificar en el subcuadro 3x3
+    for (int i = 0; i < 3; i++)
+        for (int j = 0; j < 3; j++) 
             if (s->sudoku[i + startRow][j + startCol] == num)
                 return 0; 
-        }
-    }
     return 1;
 }
 
