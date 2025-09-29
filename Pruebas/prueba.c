@@ -1,46 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define SIZE 3
+#define SIZE 9
 
 typedef struct {
-    int sudoku[SIZE][SIZE][SIZE][SIZE];
+    int sudoku[SIZE][SIZE];
 } Sudoku;
 
-typedef struct {
-    int Y, X, y, x;
-} coo;
 
 void printSudoku(const Sudoku *s) {
-    printf("-------------------------------+\n");
-    for (int iG = 0; iG < SIZE; iG++) {
-        for (int jG = 0; jG < SIZE; jG++) {
-            for (int i = 0; i < SIZE; i++) {
-                for (int j = 0; j < SIZE; j++) {
-                    int valor = s->sudoku[iG][jG][i][j];
-                    printf("%2d ", valor);
-                }
-                printf("| "); // separa submatrices horizontales
-            }
-            printf("\n");
-        }
-        if (iG < SIZE - 1)
-            printf("---------+----------+----------+\n"); // Separador entre grupos de submatrices
-    }
-}
-
-// llena las matrices de 0s
-void inicializarSudoku(Sudoku *s) {
-    // la G representa que es la y (filas) y x (columnas) de la matriz grande
-    for (int iG = 0; iG < SIZE; iG++) { 
-        for (int jG = 0; jG < SIZE; jG++) {
-            // estas ya son para las submatrices
-            for (int i = 0; i < SIZE; i++) {
-                for (int j = 0; j < SIZE; j++) {
-                    s->sudoku[iG][jG][i][j] = 0;
-                }
-            }
-        }
+    for (int y = 0; y < SIZE; y++) {
+        for (int x = 0; x < SIZE; x++)
+            printf("%3d ", s->sudoku[y][x]);
+        printf("\n\n");
     }
 }
 
@@ -65,13 +37,11 @@ int cargarSudoku(const char *filename, Sudoku *s) {
 }
 
 int main() {
-    /*Sudoku sudoku;
+    /*Sudoku sudoku = {0};
 
-    inicializarSudoku(&sudoku);
-
-    sudoku.sudoku[0][1][2][1] = 3;
-    sudoku.sudoku[1][0][0][1] = 4;
-    sudoku.sudoku[0][2][2][0] = 1;
+    sudoku.sudoku[2][1] = 2;
+    sudoku.sudoku[0][1] = 7;
+    sudoku.sudoku[2][0] = 6;
 
     printf("Sudoku antes de guardar:\n");
     printSudoku(&sudoku);
@@ -88,7 +58,7 @@ int main() {
     // Crear otro sudoku y cargar desde archivo
     Sudoku sudokuCargado;
     
-    if (cargarSudoku("sudoku2.bin", &sudokuCargado)) {
+    if (cargarSudoku("sudoku.bin", &sudokuCargado)) {
         printf("Sudoku cargado exitosamente:\n");
         printSudoku(&sudokuCargado);
     } else {
@@ -97,7 +67,7 @@ int main() {
 
     Sudoku sudokuCargado2;
     
-    if (cargarSudoku("sudoku.bin", &sudokuCargado2)) {
+    if (cargarSudoku("sudoku2.bin", &sudokuCargado2)) {
         printf("Sudoku cargado exitosamente:\n");
         printSudoku(&sudokuCargado2);
     } else {
