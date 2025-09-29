@@ -58,8 +58,6 @@ void setup_sudoku_grid(GtkBuilder *builder) {
             gtk_style_context_add_class(context, "sudoku-cell");
             
             // Determinar posición en la submatriz 3x3
-            int block_row = row / 3;
-            int block_col = col / 3;
             int pos_in_block_row = row % 3;
             int pos_in_block_col = col % 3;
             
