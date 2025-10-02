@@ -8,6 +8,10 @@ Sudoku current_sudoku;
 int solving = 0; // dice si el programa está resolviendo un sudoku
 int delay_ms = 50;
 
+static GtkWidget *IDTimeCounter;
+static guint timer_id = 0;
+static int elapsed_seconds = 0;
+
 void update_interface() {
     while (gtk_events_pending()) {
         gtk_main_iteration();
@@ -60,11 +64,35 @@ int solve_sudoku_visual(Sudoku *s) {
     return 0;
 }
 
+static gboolean timerCallback() {
+    if (solving) {
+        elapsed_seconds++;
+        int minutes = elapsed_seconds / 60;
+        int seconds = elapsed_seconds % 60;
+        char time_str[10];
+        snprintf(time_str, sizeof(time_str), "%02d:%02d", minutes, seconds);
+        gtk_label_set_text(GTK_LABEL(IDTimeCounter), time_str);
+    }
+    return G_SOURCE_CONTINUE;
+}
+
+void startTimer() {
+    elapsed_seconds = 0;  // Reiniciar contador
+    gtk_label_set_text(GTK_LABEL(IDTimeCounter), "00:00");
+    
+    // Iniciar timer si no está activo
+    if (timer_id == 0) {
+        timer_id = g_timeout_add(1000, timerCallback, NULL);
+    }
+}
+
 void on_solve_button_clicked(GtkButton *button) {
     (void)button;
     
     if (solving) return;
     solving = 1;
+
+    startTimer();
     
     // Obtener sudoku desde la interfaz
     for (int row = 0; row < SIZE; row++) {
@@ -352,10 +380,13 @@ int main(int argc, char *argv[]) {
     // Configurar el grid con entries para el Sudoku
     setup_sudoku_grid(builder);
 
+    gtk_label_set_text(GTK_LABEL(IDTimeCounter), "00:00");
+
     GtkWidget *IDSolve = GTK_WIDGET(gtk_builder_get_object(builder, "IDSolve"));
     GtkWidget *IDSave = GTK_WIDGET(gtk_builder_get_object(builder, "IDSave"));
     GtkWidget *IDOpen = GTK_WIDGET(gtk_builder_get_object(builder, "IDOpen"));
     GtkWidget *IDExit = GTK_WIDGET(gtk_builder_get_object(builder, "IDExit"));
+    IDTimeCounter = GTK_WIDGET(gtk_builder_get_object(builder, "IDTimeCounter"));
 
     if (IDSolve)
         g_signal_connect(IDSolve, "clicked", G_CALLBACK(on_solve_button_clicked), NULL);
@@ -365,7 +396,9 @@ int main(int argc, char *argv[]) {
         g_signal_connect(IDSave, "clicked", G_CALLBACK(on_save_button_clicked), NULL);
     if (IDExit)
         g_signal_connect(IDExit, "clicked", G_CALLBACK(on_window_destroy), NULL);
-    
+    if (IDTimeCounter)
+        gtk_label_set_text(GTK_LABEL(IDTimeCounter), "00:00");
+
     // Conectar la señal de cierre de ventana
     g_signal_connect(window, "destroy", G_CALLBACK(on_window_destroy), NULL);
     
@@ -377,6 +410,8 @@ int main(int argc, char *argv[]) {
     
     // Mostrar la ventana
     gtk_widget_show_all(window);
+
+    timer_id = g_timeout_add(1000, timerCallback, NULL);
     
     // Iniciar el bucle principal de GTK
     gtk_main();
