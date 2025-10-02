@@ -11,6 +11,9 @@ int solving = 0; // dice si el programa está resolviendo un sudoku
 int delay_ms = 50;
 
 static GtkWidget *IDTimeCounter;
+static GtkWidget *IDSolve;
+static GtkWidget *IDSave;
+static GtkWidget *IDOpen;
 static guint timer_id = 0;
 static int elapsed_seconds = 0;
 
@@ -23,7 +26,7 @@ void update_interface() {
 }
 
 void update_cell_ui(int row, int col, int value) {
-    if (entries && entries[row] && entries[row][col]) {
+    if (entries && entries[row] && entries[row][col] && GTK_IS_ENTRY(entries[row][col])) {
         if (value == 0) {
             gtk_entry_set_text(GTK_ENTRY(entries[row][col]), "");
         } else {
@@ -38,10 +41,19 @@ void update_cell_ui(int row, int col, int value) {
 int solve_sudoku_visual(Sudoku *s) {
     if (!solving) return 0;
     
+    // Procesar eventos pendientes de GTK para permitir interacción
+    while (gtk_events_pending()) {
+        gtk_main_iteration();
+    }
+    
+    // Verificar si se detuvo la resolución
+    if (!solving) return 0;
+    
     Cell current;
     
-    if (!findEmptyCell(s, &current))
+    if (!findEmptyCell(s, &current)) {
         return 1;
+    }
     
     int row = current.row;
     int col = current.col;
@@ -51,8 +63,12 @@ int solve_sudoku_visual(Sudoku *s) {
             s->sudoku[row][col] = num;
             update_cell_ui(row, col, num);
             
-            if (solve_sudoku_visual(s))
+            if (solve_sudoku_visual(s)) {
                 return 1;
+            }
+            
+            // Verificar si se detuvo durante la recursión
+            if (!solving) return 0;
             
             s->sudoku[row][col] = 0;
             update_cell_ui(row, col, 0);
@@ -60,6 +76,18 @@ int solve_sudoku_visual(Sudoku *s) {
     }
     
     return 0;
+}
+
+void set_buttons_enabled(gboolean enabled) {
+    if (IDSolve) {
+        gtk_widget_set_sensitive(IDSolve, enabled);
+    }
+    if (IDSave) {
+        gtk_widget_set_sensitive(IDSave, enabled);
+    }
+    if (IDOpen) {
+        gtk_widget_set_sensitive(IDOpen, enabled);
+    }
 }
 
 static gboolean timerCallback() {
@@ -89,16 +117,24 @@ void on_solve_button_clicked(GtkButton *button) {
     if (solving) return;
     solving = 1;
 
+    // Deshabilitar botones durante la resolución
+    set_buttons_enabled(FALSE);
+
     startTimer();
     
     // Obtener sudoku desde la interfaz
     for (int row = 0; row < SIZE; row++) {
         for (int col = 0; col < SIZE; col++) {
-            const char *text = gtk_entry_get_text(GTK_ENTRY(entries[row][col]));
-            if (text && strlen(text) > 0 && isdigit(text[0]))
-                current_sudoku.sudoku[row][col] = atoi(text);
-            else
+            if (entries && entries[row] && entries[row][col] && GTK_IS_ENTRY(entries[row][col])) {
+                const char *text = gtk_entry_get_text(GTK_ENTRY(entries[row][col]));
+                if (text && strlen(text) > 0 && isdigit(text[0])) {
+                    current_sudoku.sudoku[row][col] = atoi(text);
+                } else {
+                    current_sudoku.sudoku[row][col] = 0;
+                }
+            } else {
                 current_sudoku.sudoku[row][col] = 0;
+            }
         }
     }
     
@@ -106,6 +142,9 @@ void on_solve_button_clicked(GtkButton *button) {
     // sudoku, hace la acción si se le dio click
     solve_sudoku_visual(&current_sudoku);
     solving = 0;
+    
+    // Rehabilitar botones después de la resolución
+    set_buttons_enabled(TRUE);
 }
 
 // Función callback para validar entrada numérica (solo 1-9)
@@ -171,9 +210,10 @@ void on_load_button_clicked(GtkButton *button) {
             GtkWidget *error_dialog = gtk_message_dialog_new(
                 GTK_WINDOW(dialog),
                 GTK_DIALOG_MODAL,
-                GTK_MESSAGE_ERROR,GNU-specific extensions
+                GTK_MESSAGE_ERROR,
                 GTK_BUTTONS_OK,
                 "Error opening the file: %s", filename);
+            gtk_dialog_run(GTK_DIALOG(error_dialog));
             gtk_widget_destroy(error_dialog);
         }
         
@@ -191,9 +231,13 @@ void on_save_button_clicked(GtkButton *button, gpointer user_data) {
     // Primero obtener el sudoku actual desde la interfaz
     for (int row = 0; row < SIZE; row++) {
         for (int col = 0; col < SIZE; col++) {
-            const char *text = gtk_entry_get_text(GTK_ENTRY(entries[row][col]));
-            if (text && strlen(text) > 0 && isdigit(text[0])) {
-                current_sudoku.sudoku[row][col] = atoi(text);
+            if (entries && entries[row] && entries[row][col] && GTK_IS_ENTRY(entries[row][col])) {
+                const char *text = gtk_entry_get_text(GTK_ENTRY(entries[row][col]));
+                if (text && strlen(text) > 0 && isdigit(text[0])) {
+                    current_sudoku.sudoku[row][col] = atoi(text);
+                } else {
+                    current_sudoku.sudoku[row][col] = 0;
+                }
             } else {
                 current_sudoku.sudoku[row][col] = 0;
             }
@@ -308,6 +352,9 @@ void setup_sudoku_grid(GtkBuilder *builder) {
             // Agregar entry al grid principal
             gtk_grid_attach(GTK_GRID(main_grid), entry, col, row, 1, 1);
             
+            // Mostrar el widget
+            gtk_widget_show(entry);
+            
             // guarda la referencia al entry
             entries[row][col] = entry;
         }
@@ -320,6 +367,10 @@ void on_window_destroy(GtkWidget *widget, gpointer data) {
     // Marcar parámetros como no utilizados para evitar warnings
     (void)widget;
     (void)data;
+    
+    // Detener la resolución si está en curso
+    solving = 0;
+    
     gtk_main_quit();
 }
 
@@ -328,9 +379,35 @@ int main(int argc, char *argv[]) {
     GtkBuilder *builder;
     GtkWidget *window;
     GError *error = NULL;
-    
+
+    // Procesar argumentos de línea de comandos
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "-d") == 0) {
+            if (i + 1 < argc) {
+                int new_delay = atoi(argv[i + 1]);
+                if (new_delay >= 0 && new_delay <= 1000) {
+                    delay_ms = new_delay;
+                    printf("Delay configurado a: %d ms\n", delay_ms);
+                } else {
+                    printf("Error: El delay debe estar entre 0 y 1000 ms\n");
+                    return 1;
+                }
+                i++; // Saltar el siguiente argumento (el valor del delay)
+            } else {
+                printf("Error: -d requiere un valor\n");
+                printf("Uso: %s [-d <valor_en_ms>]\n", argv[0]);
+                return 1;
+            }
+        } else {
+            printf("Argumento desconocido: %s\n", argv[i]);
+            printf("Uso: %s [-d <valor_en_ms>]\n", argv[0]);
+            return 1;
+        }
+    }
+
     // inicializar sudoku
     memset(&current_sudoku, 0, sizeof(Sudoku));
+    
     // Inicializar GTK con los argumentos de línea de comandos
     gtk_init(&argc, &argv);
     
@@ -376,9 +453,10 @@ int main(int argc, char *argv[]) {
     // Configurar el grid con entries para el Sudoku
     setup_sudoku_grid(builder);
 
-    GtkWidget *IDSolve = GTK_WIDGET(gtk_builder_get_object(builder, "IDSolve"));
-    GtkWidget *IDSave = GTK_WIDGET(gtk_builder_get_object(builder, "IDSave"));
-    GtkWidget *IDOpen = GTK_WIDGET(gtk_builder_get_object(builder, "IDOpen"));
+    // Obtener referencias a los botones (usar variables globales)
+    IDSolve = GTK_WIDGET(gtk_builder_get_object(builder, "IDSolve"));
+    IDSave = GTK_WIDGET(gtk_builder_get_object(builder, "IDSave"));
+    IDOpen = GTK_WIDGET(gtk_builder_get_object(builder, "IDOpen"));
     GtkWidget *IDExit = GTK_WIDGET(gtk_builder_get_object(builder, "IDExit"));
     IDTimeCounter = GTK_WIDGET(gtk_builder_get_object(builder, "IDTimeCounter"));
 
