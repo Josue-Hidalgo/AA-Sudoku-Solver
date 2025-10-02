@@ -234,18 +234,16 @@ void on_save_button_clicked(GtkButton *button, gpointer user_data) {
             filename = new_filename;
         }
         
-        if (guardarSudoku(filename, &current_sudoku)) {
-            printf("Sudoku saved in: %s\n", filename);
-        } else {
-            // Mostrar mensaje de error
-            GtkWidget *error_dialog = gtk_message_dialog_new(
-                GTK_WINDOW(dialog),
-                GTK_DIALOG_MODAL,
-                GTK_MESSAGE_ERROR,
-                GTK_BUTTONS_OK,
-                "Error saving file: %s", filename);
-            gtk_dialog_run(GTK_DIALOG(error_dialog));
-            gtk_widget_destroy(error_dialog);
+        if (!guardarSudoku(filename, &current_sudoku)) {
+        // Mostrar mensaje de error
+        GtkWidget *error_dialog = gtk_message_dialog_new(
+            GTK_WINDOW(dialog),
+            GTK_DIALOG_MODAL,
+            GTK_MESSAGE_ERROR,
+            GTK_BUTTONS_OK,
+            "Error saving file: %s", filename);
+        gtk_dialog_run(GTK_DIALOG(error_dialog));
+        gtk_widget_destroy(error_dialog);
         }
         
         g_free(filename);
