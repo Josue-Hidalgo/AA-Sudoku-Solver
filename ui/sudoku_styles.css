@@ -79,6 +79,18 @@ entry:hover {
     margin-right: 3px;
 }
 
+/* Estilo para las pistas iniciales (clues) - color verde */
+.sudoku-cell.clue {
+    background-color: #c8e6c9;  /* Verde claro */
+    color: #2e7d32;             /* Verde oscuro para el texto */
+    font-weight: bold;
+}
+
+.sudoku-cell.clue:focus {
+    background-color: #a5d6a7;  /* Verde ligeramente más oscuro al hacer focus */
+    border: 2px solid #4caf50;  /* Borde verde */
+}
+
 /* Estilo para la ventana principal */
 window {
     background-color: #f0f0f0;

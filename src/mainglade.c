@@ -108,6 +108,10 @@ void clear_grid() {
         for (int col = 0; col < SIZE; col++) {
             if (entries && entries[row] && entries[row][col] && GTK_IS_ENTRY(entries[row][col])) {
                 gtk_entry_set_text(GTK_ENTRY(entries[row][col]), "");
+                
+                // Remover la clase CSS "clue" al limpiar
+                GtkStyleContext *context = gtk_widget_get_style_context(entries[row][col]);
+                gtk_style_context_remove_class(context, "clue");
             }
             current_sudoku.sudoku[row][col] = 0;
         }
@@ -135,8 +139,28 @@ void startTimer() {
         timer_id = g_timeout_add(1000, timerCallback, NULL);
 }
 
-void set_clues_green(){
+void set_clues_green(gboolean enable) {
+    if (!entries) return;
     
+    for (int row = 0; row < SIZE; row++) {
+        for (int col = 0; col < SIZE; col++) {
+            if (entries[row] && entries[row][col] && GTK_IS_ENTRY(entries[row][col])) {
+                GtkStyleContext *context = gtk_widget_get_style_context(entries[row][col]);
+                
+                // Verificar si la casilla tiene un valor (es una pista inicial)
+                const char *text = gtk_entry_get_text(GTK_ENTRY(entries[row][col]));
+                gboolean has_value = (text && strlen(text) > 0 && isdigit(text[0]));
+                
+                if (enable && has_value) {
+                    // Agregar la clase CSS "clue" para pistas iniciales
+                    gtk_style_context_add_class(context, "clue");
+                } else {
+                    // Remover la clase CSS "clue"
+                    gtk_style_context_remove_class(context, "clue");
+                }
+            }
+        }
+    }
 }
 
 void on_solve_button_clicked(GtkButton *button) {
@@ -235,6 +259,9 @@ void on_load_button_clicked(GtkButton *button) {
                     }
                 }
             }
+            
+            // Aplicar estilo verde a las pistas iniciales
+            set_clues_green(TRUE);
         } else {
             // Mostrar mensaje de error
             GtkWidget *error_dialog = gtk_message_dialog_new(
