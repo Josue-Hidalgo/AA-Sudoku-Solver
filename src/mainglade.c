@@ -5,7 +5,7 @@
 
 GtkWidget ***entries = NULL;
 Sudoku current_sudoku;
-int solving = 0;
+int solving = 0; // dice si el programa está resolviendo un sudoku
 int delay_ms = 50;
 
 void update_interface() {
@@ -60,9 +60,8 @@ int solve_sudoku_visual(Sudoku *s) {
     return 0;
 }
 
-void on_solve_button_clicked(GtkButton *button, gpointer user_data) {
+void on_solve_button_clicked(GtkButton *button) {
     (void)button;
-    (void)user_data;
     
     if (solving) return;
     solving = 1;
@@ -79,7 +78,8 @@ void on_solve_button_clicked(GtkButton *button, gpointer user_data) {
         }
     }
     
-    // Ejecutar directamente (puede bloquear la UI temporalmente)
+    // bloquea la UI temporalmente, cuando termina de resolverse el 
+    // sudoku, hace la acción si se le dio click
     solve_sudoku_visual(&current_sudoku);
     solving = 0;
 }
@@ -105,16 +105,136 @@ void on_entry_insert_text(GtkEditable *editable, gchar *new_text, gint new_text_
     }
 }
 
+// Función para cargar un sudoku desde archivo
+void on_load_button_clicked(GtkButton *button) {
+    (void)button;
+    
+    // Crear diálogo para abrir archivo
+    GtkWidget *dialog = gtk_file_chooser_dialog_new("Load Sudoku",
+                                                   GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(button))),
+                                                   GTK_FILE_CHOOSER_ACTION_OPEN,
+                                                   "Cancel", GTK_RESPONSE_CANCEL,
+                                                   "Load", GTK_RESPONSE_ACCEPT,
+                                                   NULL);
+    
+    // Filtrar por archivos binarios
+    GtkFileFilter *filter = gtk_file_filter_new();
+    gtk_file_filter_set_name(filter, "Sudoku files (*.bin)");
+    gtk_file_filter_add_pattern(filter, "*.bin");
+    gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter);
+    
+    // Mostrar diálogo
+    gint result = gtk_dialog_run(GTK_DIALOG(dialog));
+    
+    if (result == GTK_RESPONSE_ACCEPT) {
+        char *filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+        
+        if (cargarSudoku(filename, &current_sudoku)) {
+            // Actualizar la interfaz con el sudoku cargado
+            for (int row = 0; row < SIZE; row++) {
+                for (int col = 0; col < SIZE; col++) {
+                    if (current_sudoku.sudoku[row][col] != 0) {
+                        char text[2];
+                        snprintf(text, sizeof(text), "%d", current_sudoku.sudoku[row][col]);
+                        gtk_entry_set_text(GTK_ENTRY(entries[row][col]), text);
+                    } else {
+                        gtk_entry_set_text(GTK_ENTRY(entries[row][col]), "");
+                    }
+                }
+            }
+        } else {
+            // Mostrar mensaje de error
+            GtkWidget *error_dialog = gtk_message_dialog_new(
+                GTK_WINDOW(dialog),
+                GTK_DIALOG_MODAL,
+                GTK_MESSAGE_ERROR,
+                GTK_BUTTONS_OK,
+                "Error opening the file: %s", filename);
+            gtk_widget_destroy(error_dialog);
+        }
+        
+        g_free(filename);
+    }
+    
+    gtk_widget_destroy(dialog);
+}
+
+// Función para guardar un sudoku a archivo
+void on_save_button_clicked(GtkButton *button, gpointer user_data) {
+    (void)button;
+    (void)user_data;
+    
+    // Primero obtener el sudoku actual desde la interfaz
+    for (int row = 0; row < SIZE; row++) {
+        for (int col = 0; col < SIZE; col++) {
+            const char *text = gtk_entry_get_text(GTK_ENTRY(entries[row][col]));
+            if (text && strlen(text) > 0 && isdigit(text[0])) {
+                current_sudoku.sudoku[row][col] = atoi(text);
+            } else {
+                current_sudoku.sudoku[row][col] = 0;
+            }
+        }
+    }
+    
+    // Crear diálogo para guardar archivo
+    GtkWidget *dialog = gtk_file_chooser_dialog_new("Save Sudoku",
+                                                   GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(button))),
+                                                   GTK_FILE_CHOOSER_ACTION_SAVE,
+                                                   "Cancel", GTK_RESPONSE_CANCEL,
+                                                   "Save", GTK_RESPONSE_ACCEPT,
+                                                   NULL);
+    
+    // Sugerir nombre por defecto
+    gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog), "sudoku.bin");
+    
+    // Filtrar por archivos binarios
+    GtkFileFilter *filter = gtk_file_filter_new();
+    gtk_file_filter_set_name(filter, "Sudoku files (*.bin)");
+    gtk_file_filter_add_pattern(filter, "*.bin");
+    gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter);
+    
+    // Mostrar diálogo
+    gint result = gtk_dialog_run(GTK_DIALOG(dialog));
+    
+    if (result == GTK_RESPONSE_ACCEPT) {
+        char *filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+        
+        // Asegurar extensión .bin
+        if (!g_str_has_suffix(filename, ".bin")) {
+            char *new_filename = g_strdup_printf("%s.bin", filename);
+            g_free(filename);
+            filename = new_filename;
+        }
+        
+        if (guardarSudoku(filename, &current_sudoku)) {
+            printf("Sudoku saved in: %s\n", filename);
+        } else {
+            // Mostrar mensaje de error
+            GtkWidget *error_dialog = gtk_message_dialog_new(
+                GTK_WINDOW(dialog),
+                GTK_DIALOG_MODAL,
+                GTK_MESSAGE_ERROR,
+                GTK_BUTTONS_OK,
+                "Error saving file: %s", filename);
+            gtk_dialog_run(GTK_DIALOG(error_dialog));
+            gtk_widget_destroy(error_dialog);
+        }
+        
+        g_free(filename);
+    }
+    
+    gtk_widget_destroy(dialog);
+}
+
 // Función para crear y configurar entries en el grid principal del Sudoku (9x9)
 void setup_sudoku_grid(GtkBuilder *builder) {
     // Obtener el grid principal
     GtkWidget *main_grid = GTK_WIDGET(gtk_builder_get_object(builder, "IDGrid"));
     if (!main_grid || !GTK_IS_GRID(main_grid)) {
-        printf("Error: No se pudo obtener el grid principal IDGrid\n");
         return;
     }
     
-    // INICIALIZAR LA MATRIZ DE ENTRIES
+    // inicializar la matriz de entires
     entries = g_malloc(9 * sizeof(GtkWidget**));
     for (int i = 0; i < 9; i++) {
         entries[i] = g_malloc(9 * sizeof(GtkWidget*));
@@ -166,11 +286,10 @@ void setup_sudoku_grid(GtkBuilder *builder) {
             // Agregar entry al grid principal
             gtk_grid_attach(GTK_GRID(main_grid), entry, col, row, 1, 1);
             
-            // GUARDAR LA REFERENCIA AL ENTRY
+            // guarda la referencia al entry
             entries[row][col] = entry;
         }
     }
-    
     //printf("Grid principal configurado con 81 entries (9x9)\n");
 }
 
@@ -186,7 +305,7 @@ int main(int argc, char *argv[]) {
     GtkBuilder *builder;
     GtkWidget *window;
     GError *error = NULL;
-    // INICIALIZAR EL SUDOKU
+    // inicializar sudoku
     memset(&current_sudoku, 0, sizeof(Sudoku));
     // Inicializar GTK con los argumentos de línea de comandos
     gtk_init(&argc, &argv);
@@ -234,14 +353,18 @@ int main(int argc, char *argv[]) {
     setup_sudoku_grid(builder);
 
     GtkWidget *IDSolve = GTK_WIDGET(gtk_builder_get_object(builder, "IDSolve"));
+    GtkWidget *IDSave = GTK_WIDGET(gtk_builder_get_object(builder, "IDSave"));
+    GtkWidget *IDOpen = GTK_WIDGET(gtk_builder_get_object(builder, "IDOpen"));
     GtkWidget *IDExit = GTK_WIDGET(gtk_builder_get_object(builder, "IDExit"));
 
-    if (IDSolve) {
+    if (IDSolve)
         g_signal_connect(IDSolve, "clicked", G_CALLBACK(on_solve_button_clicked), NULL);
-    }
-    if (IDExit) {
+    if (IDOpen)
+        g_signal_connect(IDOpen, "clicked", G_CALLBACK(on_load_button_clicked), NULL);
+    if (IDSave)
+        g_signal_connect(IDSave, "clicked", G_CALLBACK(on_save_button_clicked), NULL);
+    if (IDExit)
         g_signal_connect(IDExit, "clicked", G_CALLBACK(on_window_destroy), NULL);
-    }
     
     // Conectar la señal de cierre de ventana
     g_signal_connect(window, "destroy", G_CALLBACK(on_window_destroy), NULL);
