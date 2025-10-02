@@ -1,6 +1,7 @@
 #include <gtk/gtk.h>
 #include <string.h>
 #include <ctype.h>
+#include <unistd.h>
 #include "logic.h"
 
 GtkWidget ***entries = NULL;
@@ -69,7 +70,7 @@ static gboolean timerCallback() {
         elapsed_seconds++;
         int minutes = elapsed_seconds / 60;
         int seconds = elapsed_seconds % 60;
-        char time_str[10];
+        char time_str[16];
         snprintf(time_str, sizeof(time_str), "%02d:%02d", minutes, seconds);
         gtk_label_set_text(GTK_LABEL(IDTimeCounter), time_str);
     }
