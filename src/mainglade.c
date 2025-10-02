@@ -380,8 +380,6 @@ int main(int argc, char *argv[]) {
     // Configurar el grid con entries para el Sudoku
     setup_sudoku_grid(builder);
 
-    gtk_label_set_text(GTK_LABEL(IDTimeCounter), "00:00");
-
     GtkWidget *IDSolve = GTK_WIDGET(gtk_builder_get_object(builder, "IDSolve"));
     GtkWidget *IDSave = GTK_WIDGET(gtk_builder_get_object(builder, "IDSave"));
     GtkWidget *IDOpen = GTK_WIDGET(gtk_builder_get_object(builder, "IDOpen"));
