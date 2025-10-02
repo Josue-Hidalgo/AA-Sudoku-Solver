@@ -135,6 +135,10 @@ void startTimer() {
         timer_id = g_timeout_add(1000, timerCallback, NULL);
 }
 
+void set_clues_green(){
+    
+}
+
 void on_solve_button_clicked(GtkButton *button) {
     (void)button;
     
@@ -143,6 +147,8 @@ void on_solve_button_clicked(GtkButton *button) {
 
     // Deshabilitar botones durante la resolución
     set_buttons_enabled(FALSE);
+
+    set_clues_green(TRUE);
 
     startTimer();
     
