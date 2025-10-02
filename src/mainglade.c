@@ -171,7 +171,7 @@ void on_load_button_clicked(GtkButton *button) {
             GtkWidget *error_dialog = gtk_message_dialog_new(
                 GTK_WINDOW(dialog),
                 GTK_DIALOG_MODAL,
-                GTK_MESSAGE_ERROR,
+                GTK_MESSAGE_ERROR,GNU-specific extensions
                 GTK_BUTTONS_OK,
                 "Error opening the file: %s", filename);
             gtk_widget_destroy(error_dialog);
@@ -200,7 +200,7 @@ void on_save_button_clicked(GtkButton *button, gpointer user_data) {
         }
     }
     
-    // Crear diálogo para guardar archivo
+    // Crear diálogo para guardar archivoGNU-specific extensions
     GtkWidget *dialog = gtk_file_chooser_dialog_new("Save Sudoku",
                                                    GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(button))),
                                                    GTK_FILE_CHOOSER_ACTION_SAVE,
@@ -324,9 +324,11 @@ void on_window_destroy(GtkWidget *widget, gpointer data) {
 }
 
 int main(int argc, char *argv[]) {
+    
     GtkBuilder *builder;
     GtkWidget *window;
     GError *error = NULL;
+    
     // inicializar sudoku
     memset(&current_sudoku, 0, sizeof(Sudoku));
     // Inicializar GTK con los argumentos de línea de comandos
