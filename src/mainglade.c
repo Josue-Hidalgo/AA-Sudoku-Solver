@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <gtk/gtk.h>
 #include <string.h>
 #include <ctype.h>
@@ -14,13 +15,11 @@ static guint timer_id = 0;
 static int elapsed_seconds = 0;
 
 void update_interface() {
-    while (gtk_events_pending()) {
+    while (gtk_events_pending())
         gtk_main_iteration();
-    }
     
-    if (delay_ms > 0) {
+    if (delay_ms > 0)
         usleep(delay_ms * 200);
-    }
 }
 
 void update_cell_ui(int row, int col, int value) {
@@ -41,9 +40,8 @@ int solve_sudoku_visual(Sudoku *s) {
     
     Cell current;
     
-    if (!findEmptyCell(s, &current)) {
+    if (!findEmptyCell(s, &current))
         return 1;
-    }
     
     int row = current.row;
     int col = current.col;
@@ -53,9 +51,8 @@ int solve_sudoku_visual(Sudoku *s) {
             s->sudoku[row][col] = num;
             update_cell_ui(row, col, num);
             
-            if (solve_sudoku_visual(s)) {
+            if (solve_sudoku_visual(s))
                 return 1;
-            }
             
             s->sudoku[row][col] = 0;
             update_cell_ui(row, col, 0);
@@ -82,9 +79,8 @@ void startTimer() {
     gtk_label_set_text(GTK_LABEL(IDTimeCounter), "00:00");
     
     // Iniciar timer si no está activo
-    if (timer_id == 0) {
+    if (timer_id == 0)
         timer_id = g_timeout_add(1000, timerCallback, NULL);
-    }
 }
 
 void on_solve_button_clicked(GtkButton *button) {
@@ -99,11 +95,10 @@ void on_solve_button_clicked(GtkButton *button) {
     for (int row = 0; row < SIZE; row++) {
         for (int col = 0; col < SIZE; col++) {
             const char *text = gtk_entry_get_text(GTK_ENTRY(entries[row][col]));
-            if (text && strlen(text) > 0 && isdigit(text[0])) {
+            if (text && strlen(text) > 0 && isdigit(text[0]))
                 current_sudoku.sudoku[row][col] = atoi(text);
-            } else {
+            else
                 current_sudoku.sudoku[row][col] = 0;
-            }
         }
     }
     
