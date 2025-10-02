@@ -42,27 +42,23 @@ int cargarSudoku(const char *filename, Sudoku *s) {
 
 int promising(Sudoku *s, int row, int col, int num) {
     // Verificar fila
-    for (int x = 0; x < SIZE; x++) {
+    for (int x = 0; x < SIZE; x++)
         if (s->sudoku[row][x] == num)
             return 0;
-    }
 
     // Verificar columna
-    for (int y = 0; y < SIZE; y++) {
+    for (int y = 0; y < SIZE; y++)
         if (s->sudoku[y][col] == num)
             return 0; //
-    }
 
     // Verificar subcuadro 3x3
     int startRow = row - row % 3;
     int startCol = col - col % 3;
 
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
+    for (int i = 0; i < 3; i++)
+        for (int j = 0; j < 3; j++)
             if (s->sudoku[i + startRow][j + startCol] == num)
                 return 0; 
-        }
-    }
     return 1;
 }
 
@@ -82,9 +78,8 @@ int solver(Sudoku *s) {
     Cell current;
     
     // Si no hay celdas vacías, el sudoku está resuelto
-    if (!findEmptyCell(s, &current)) {
+    if (!findEmptyCell(s, &current))
         return 1; // Éxito
-    }
     
     int row = current.row;
     int col = current.col;
@@ -96,9 +91,8 @@ int solver(Sudoku *s) {
             s->sudoku[row][col] = num;
             
             // Recursivamente resolver el resto
-            if (solver(s)) {
+            if (solver(s))
                 return 1; // Éxito
-            }
             
             // Si falla, deshacer (backtrack)
             s->sudoku[row][col] = 0;

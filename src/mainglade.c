@@ -90,6 +90,30 @@ void set_buttons_enabled(gboolean enabled) {
     }
 }
 
+// Función para verificar si el sudoku está completo (sin casillas vacías)
+gboolean is_sudoku_complete() {
+    for (int row = 0; row < SIZE; row++) {
+        for (int col = 0; col < SIZE; col++) {
+            if (current_sudoku.sudoku[row][col] == 0) {
+                return FALSE;
+            }
+        }
+    }
+    return TRUE;
+}
+
+// Función para limpiar el grid (poner todas las casillas en blanco)
+void clear_grid() {
+    for (int row = 0; row < SIZE; row++) {
+        for (int col = 0; col < SIZE; col++) {
+            if (entries && entries[row] && entries[row][col] && GTK_IS_ENTRY(entries[row][col])) {
+                gtk_entry_set_text(GTK_ENTRY(entries[row][col]), "");
+            }
+            current_sudoku.sudoku[row][col] = 0;
+        }
+    }
+}
+
 static gboolean timerCallback() {
     if (solving) {
         elapsed_seconds++;
@@ -244,7 +268,10 @@ void on_save_button_clicked(GtkButton *button, gpointer user_data) {
         }
     }
     
-    // Crear diálogo para guardar archivoGNU-specific extensions
+    // Verificar si el sudoku está completo antes de guardar
+    gboolean is_complete = is_sudoku_complete();
+    
+    // Crear diálogo para guardar archivo
     GtkWidget *dialog = gtk_file_chooser_dialog_new("Save Sudoku",
                                                    GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(button))),
                                                    GTK_FILE_CHOOSER_ACTION_SAVE,
@@ -274,16 +301,24 @@ void on_save_button_clicked(GtkButton *button, gpointer user_data) {
             filename = new_filename;
         }
         
-        if (!guardarSudoku(filename, &current_sudoku)) {
-        // Mostrar mensaje de error
-        GtkWidget *error_dialog = gtk_message_dialog_new(
-            GTK_WINDOW(dialog),
-            GTK_DIALOG_MODAL,
-            GTK_MESSAGE_ERROR,
-            GTK_BUTTONS_OK,
-            "Error saving file: %s", filename);
-        gtk_dialog_run(GTK_DIALOG(error_dialog));
-        gtk_widget_destroy(error_dialog);
+        if (guardarSudoku(filename, &current_sudoku)) {
+            //printf("Sudoku saved in: %s\n", filename);
+            
+            // Si el sudoku está completo (sin casillas vacías), limpiar el grid
+            if (is_complete) {
+                clear_grid();
+                //printf("Grid cleared after saving complete sudoku\n");
+            }
+        } else {
+            // Mostrar mensaje de error
+            GtkWidget *error_dialog = gtk_message_dialog_new(
+                GTK_WINDOW(dialog),
+                GTK_DIALOG_MODAL,
+                GTK_MESSAGE_ERROR,
+                GTK_BUTTONS_OK,
+                "Error saving file: %s", filename);
+            gtk_dialog_run(GTK_DIALOG(error_dialog));
+            gtk_widget_destroy(error_dialog);
         }
         
         g_free(filename);
@@ -375,10 +410,6 @@ void on_window_destroy(GtkWidget *widget, gpointer data) {
 }
 
 int main(int argc, char *argv[]) {
-    
-    GtkBuilder *builder;
-    GtkWidget *window;
-    GError *error = NULL;
 
     // Procesar argumentos de línea de comandos
     for (int i = 1; i < argc; i++) {
@@ -387,27 +418,33 @@ int main(int argc, char *argv[]) {
                 int new_delay = atoi(argv[i + 1]);
                 if (new_delay >= 0 && new_delay <= 1000) {
                     delay_ms = new_delay;
-                    printf("Delay configurado a: %d ms\n", delay_ms);
+                    //printf("Delay configurado a: %d ms\n", delay_ms);
                 } else {
-                    printf("Error: El delay debe estar entre 0 y 1000 ms\n");
+                    //printf("Error: El delay debe estar entre 0 y 1000 ms\n");
                     return 1;
                 }
                 i++; // Saltar el siguiente argumento (el valor del delay)
             } else {
-                printf("Error: -d requiere un valor\n");
-                printf("Uso: %s [-d <valor_en_ms>]\n", argv[0]);
+                //printf("Error: -d requiere un valor\n");
+                //printf("Uso: %s [-d <valor_en_ms>]\n", argv[0]);
                 return 1;
             }
         } else {
-            printf("Argumento desconocido: %s\n", argv[i]);
-            printf("Uso: %s [-d <valor_en_ms>]\n", argv[0]);
+            //printf("Argumento desconocido: %s\n", argv[i]);
+            //printf("Uso: %s [-d <valor_en_ms>]\n", argv[0]);
             return 1;
         }
     }
 
-    // inicializar sudoku
+    // Inicializar GTK y cargar la interfaz desde el archivo Glade
+    GtkBuilder *builder;
+    GtkWidget *window;
+    GError *error = NULL;
+
+    // Inicializar sudoku
     memset(&current_sudoku, 0, sizeof(Sudoku));
-    
+    //printf("Tamaño de Sudoku: %zu bytes\n", sizeof(Sudoku));
+
     // Inicializar GTK con los argumentos de línea de comandos
     gtk_init(&argc, &argv);
     
