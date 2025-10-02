@@ -14,7 +14,7 @@ TARGET = Sudoku
 SRC_DIR = src
 
 # Archivos fuente
-SRC = $(SRC_DIR)/main.c
+SRC = $(SRC_DIR)/mainglade.c $(SRC_DIR)/logic.c
 
 # Regla por defecto
 all: $(TARGET)

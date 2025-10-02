@@ -1,6 +1,88 @@
 #include <gtk/gtk.h>
 #include <string.h>
 #include <ctype.h>
+#include "logic.h"
+
+GtkWidget ***entries = NULL;
+Sudoku current_sudoku;
+int solving = 0;
+int delay_ms = 50;
+
+void update_interface() {
+    while (gtk_events_pending()) {
+        gtk_main_iteration();
+    }
+    
+    if (delay_ms > 0) {
+        usleep(delay_ms * 200);
+    }
+}
+
+void update_cell_ui(int row, int col, int value) {
+    if (entries && entries[row] && entries[row][col]) {
+        if (value == 0) {
+            gtk_entry_set_text(GTK_ENTRY(entries[row][col]), "");
+        } else {
+            char text[2];
+            snprintf(text, sizeof(text), "%d", value);
+            gtk_entry_set_text(GTK_ENTRY(entries[row][col]), text);
+        }
+        update_interface();
+    }
+}
+
+int solve_sudoku_visual(Sudoku *s) {
+    if (!solving) return 0;
+    
+    Cell current;
+    
+    if (!findEmptyCell(s, &current)) {
+        return 1;
+    }
+    
+    int row = current.row;
+    int col = current.col;
+    
+    for (int num = 1; num <= 9 && solving; num++) {
+        if (promising(s, row, col, num)) {
+            s->sudoku[row][col] = num;
+            update_cell_ui(row, col, num);
+            
+            if (solve_sudoku_visual(s)) {
+                return 1;
+            }
+            
+            s->sudoku[row][col] = 0;
+            update_cell_ui(row, col, 0);
+        }
+    }
+    
+    return 0;
+}
+
+void on_solve_button_clicked(GtkButton *button, gpointer user_data) {
+    (void)button;
+    (void)user_data;
+    
+    if (solving) return;
+    solving = 1;
+    
+    // Obtener sudoku desde la interfaz
+    for (int row = 0; row < SIZE; row++) {
+        for (int col = 0; col < SIZE; col++) {
+            const char *text = gtk_entry_get_text(GTK_ENTRY(entries[row][col]));
+            if (text && strlen(text) > 0 && isdigit(text[0])) {
+                current_sudoku.sudoku[row][col] = atoi(text);
+            } else {
+                current_sudoku.sudoku[row][col] = 0;
+            }
+        }
+    }
+    
+    // Ejecutar directamente (puede bloquear la UI temporalmente)
+    solve_sudoku_visual(&current_sudoku);
+    solving = 0;
+}
 
 // Función callback para validar entrada numérica (solo 1-9)
 void on_entry_insert_text(GtkEditable *editable, gchar *new_text, gint new_text_length, 
@@ -32,6 +114,12 @@ void setup_sudoku_grid(GtkBuilder *builder) {
         return;
     }
     
+    // INICIALIZAR LA MATRIZ DE ENTRIES
+    entries = g_malloc(9 * sizeof(GtkWidget**));
+    for (int i = 0; i < 9; i++) {
+        entries[i] = g_malloc(9 * sizeof(GtkWidget*));
+    }
+
     // Crear 81 entries directamente en el grid principal (9x9)
     for (int row = 0; row < 9; row++) {
         for (int col = 0; col < 9; col++) {
@@ -77,10 +165,13 @@ void setup_sudoku_grid(GtkBuilder *builder) {
             
             // Agregar entry al grid principal
             gtk_grid_attach(GTK_GRID(main_grid), entry, col, row, 1, 1);
+            
+            // GUARDAR LA REFERENCIA AL ENTRY
+            entries[row][col] = entry;
         }
     }
     
-    printf("Grid principal configurado con 81 entries (9x9)\n");
+    //printf("Grid principal configurado con 81 entries (9x9)\n");
 }
 
 // Función para manejar el cierre de la ventana
@@ -92,12 +183,11 @@ void on_window_destroy(GtkWidget *widget, gpointer data) {
 }
 
 int main(int argc, char *argv[]) {
-
-    // Declaraciones de variables (son necesarias para GTK)
     GtkBuilder *builder;
     GtkWidget *window;
     GError *error = NULL;
-    
+    // INICIALIZAR EL SUDOKU
+    memset(&current_sudoku, 0, sizeof(Sudoku));
     // Inicializar GTK con los argumentos de línea de comandos
     gtk_init(&argc, &argv);
     
@@ -111,9 +201,9 @@ int main(int argc, char *argv[]) {
         gtk_style_context_add_provider_for_screen(screen, 
                                                  GTK_STYLE_PROVIDER(css_provider),
                                                  GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-        printf("CSS cargado exitosamente\n");
+        //printf("CSS cargado exitosamente\n");
     } else {
-        printf("Error cargando CSS: %s\n", error->message);
+        //printf("Error cargando CSS: %s\n", error->message);
         g_clear_error(&error);
     }
     
@@ -128,7 +218,7 @@ int main(int argc, char *argv[]) {
     
     // Validar si la carga fue exitosa
     if (!valid) {
-        printf("Error cargando archivo Glade: %s\n", error->message);
+        //printf("Error cargando archivo Glade: %s\n", error->message);
         g_clear_error(&error);
         return 1;
     }
@@ -136,12 +226,22 @@ int main(int argc, char *argv[]) {
     // Obtener la ventana principal del archivo Glade
     window = GTK_WIDGET(gtk_builder_get_object(builder, "IDWindow"));
     if (!window) {
-        printf("Error: No se pudo encontrar la ventana 'IDWindow' en el archivo Glade\n");
+        //printf("Error: No se pudo encontrar la ventana 'IDWindow' en el archivo Glade\n");
         return 1;
     }
     
     // Configurar el grid con entries para el Sudoku
     setup_sudoku_grid(builder);
+
+    GtkWidget *IDSolve = GTK_WIDGET(gtk_builder_get_object(builder, "IDSolve"));
+    GtkWidget *IDExit = GTK_WIDGET(gtk_builder_get_object(builder, "IDExit"));
+
+    if (IDSolve) {
+        g_signal_connect(IDSolve, "clicked", G_CALLBACK(on_solve_button_clicked), NULL);
+    }
+    if (IDExit) {
+        g_signal_connect(IDExit, "clicked", G_CALLBACK(on_window_destroy), NULL);
+    }
     
     // Conectar la señal de cierre de ventana
     g_signal_connect(window, "destroy", G_CALLBACK(on_window_destroy), NULL);
