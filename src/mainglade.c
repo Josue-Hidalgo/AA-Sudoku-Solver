@@ -331,9 +331,9 @@ void on_save_button_clicked(GtkButton *button, gpointer user_data) {
 void setup_sudoku_grid(GtkBuilder *builder) {
     // Obtener el grid principal
     GtkWidget *main_grid = GTK_WIDGET(gtk_builder_get_object(builder, "IDGrid"));
-    if (!main_grid || !GTK_IS_GRID(main_grid)) {
-        return;
-    }
+    if (!main_grid || !GTK_IS_GRID(main_grid))
+        return;    // Configurar el grid con entries para el Sudoku
+    setup_sudoku_grid(builder);
     
     // inicializar la matriz de entires
     entries = g_malloc(9 * sizeof(GtkWidget**));
@@ -452,28 +452,19 @@ int main(int argc, char *argv[]) {
     GtkCssProvider *css_provider = gtk_css_provider_new();
     GdkDisplay *display = gdk_display_get_default();
     GdkScreen *screen = gdk_display_get_default_screen(display);
-    
-    // Cargar el archivo CSS
     if (gtk_css_provider_load_from_path(css_provider, "ui/sudoku_styles.css", &error)) {
         gtk_style_context_add_provider_for_screen(screen, 
                                                  GTK_STYLE_PROVIDER(css_provider),
                                                  GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-        //printf("CSS cargado exitosamente\n");
     } else {
         //printf("Error cargando CSS: %s\n", error->message);
         g_clear_error(&error);
     }
-    
-    // Liberar el provider CSS
     g_object_unref(css_provider);
     
     // Crear el builder
     builder = gtk_builder_new();
-    
-    // Cargar archivo Glade desde la ruta especificada
     gboolean valid = gtk_builder_add_from_file(builder, "ui/Suduku_Glade.glade", &error);
-    
-    // Validar si la carga fue exitosa
     if (!valid) {
         //printf("Error cargando archivo Glade: %s\n", error->message);
         g_clear_error(&error);
@@ -508,10 +499,8 @@ int main(int argc, char *argv[]) {
     if (IDTimeCounter)
         gtk_label_set_text(GTK_LABEL(IDTimeCounter), "00:00");
 
-    // Conectar la señal de cierre de ventana
+    // Conectar las señales de la ventana
     g_signal_connect(window, "destroy", G_CALLBACK(on_window_destroy), NULL);
-    
-    // Conectar todas las señales automáticamente (si las hay definidas en el Glade)
     gtk_builder_connect_signals(builder, NULL);
     
     // Liberar el builder
