@@ -1,4 +1,4 @@
-# Sudoku Solver#
+# Sudoku Solver #
 - C Compiler (Required)
 - GTK v4.0
 - Glade
