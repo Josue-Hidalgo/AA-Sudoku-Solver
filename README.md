@@ -1,9 +1,9 @@
-# PRO2-AA - Sudoku #
+# Sudoku Solver#
 - C Compiler (Required)
 - GTK v4.0
 - Glade
 
-# Aithors #
+# Authors #
 - Josue S. Hidalgo S. // Allan J. Jimenez R.
 
 # Contacto #
