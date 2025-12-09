@@ -2,8 +2,8 @@
 
 # Sudoku Solver #
 - C Compiler (Required)
-- GTK v4.0
-- Glade
+- Glade + GTK v4.0
+- Install Fonts
 
 # Authors #
 - Josue S. Hidalgo S. // Allan J. Jimenez R.
