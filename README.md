@@ -12,4 +12,4 @@
 - j.hidalgo.5@estudiantec.cr // a.jimenez.10@estudiantec.cr
 
 # Description #
-- This program will display a GTK - Glade GUI with a Sudoku game. 
+- This project is about Backtracking. The goal was to implement a Backtracking Algorithm that returns a solution for a Sudoku (with clues or not).
